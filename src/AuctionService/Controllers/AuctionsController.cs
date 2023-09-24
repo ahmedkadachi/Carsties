@@ -5,6 +5,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Contracts;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -50,13 +51,14 @@ namespace AuctionService.Controllers
             return _mapper.Map<AuctionDTO>(auction);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<AuctionDTO>> CreateAuction(CreateAuctionDTO auctionDTO)
         {
             var auction = _mapper.Map<Auction>(auctionDTO);
             // TODO: add current user as seller
 
-            auction.Seller = "test";
+            auction.Seller = User.Identity.Name;
 
             _context.Auctions.Add(auction);
 
@@ -72,6 +74,7 @@ namespace AuctionService.Controllers
             return CreatedAtAction(nameof(GetAuctionById), new {auction.Id}, newAuction);
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdateAuction(Guid id, UpdateAuctionDTO updateAuctionDTO)
         {
@@ -81,6 +84,7 @@ namespace AuctionService.Controllers
             if(auction==null) return NotFound();
 
             // TODO : chech seller == username
+            if (auction.Seller != User.Identity.Name) return Forbid();
 
             auction.Item.Make = updateAuctionDTO.Make ?? auction.Item.Make;
             auction.Item.Model = updateAuctionDTO.Model ?? auction.Item.Model;
@@ -97,6 +101,7 @@ namespace AuctionService.Controllers
             return BadRequest("Problem saving changes");
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteAuction(Guid id)
         {
@@ -104,6 +109,7 @@ namespace AuctionService.Controllers
             if(auction==null) return NotFound();
 
             // TODO: check seller == username
+            if (auction.Seller != User.Identity.Name) return Forbid();
 
             _context.Auctions.Remove(auction);
             await _publishEndpoint.Publish(new AuctionDeleted { Id=auction.Id.ToString() });
