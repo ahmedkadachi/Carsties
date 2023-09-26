@@ -15,6 +15,7 @@ namespace SearchService.Consumers
         }
         public async Task Consume(ConsumeContext<AuctionDeleted> context)
         {
+            Console.WriteLine("--> Consuming auction delete");
             var result = await DB.DeleteAsync<Item>(context.Message.Id);
 
             if (!result.IsAcknowledged)

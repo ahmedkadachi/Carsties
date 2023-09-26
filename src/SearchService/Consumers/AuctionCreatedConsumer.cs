@@ -15,6 +15,8 @@ namespace SearchService.Consumers
         }
         public async Task Consume(ConsumeContext<AuctionCreated> context)
         {
+            Console.WriteLine("--> Consuming auction creation");
+
             var item = _mapper.Map<Item>(context.Message);
 
             if (item.Model == "Foo") throw new ArgumentException("Cannot sell cars with name of Foo");

@@ -15,6 +15,7 @@ namespace SearchService.Consumers
         }
         public async Task Consume(ConsumeContext<AuctionUpdated> context)
         {
+            Console.WriteLine("--> Consuming auction update");
             var item = _mapper.Map<Item>(context.Message);
             var result = await DB.Update<Item>()
                 .Match(a => a.ID == context.Message.Id)
